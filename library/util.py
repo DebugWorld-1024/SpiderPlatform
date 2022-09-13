@@ -1,5 +1,6 @@
 import re
 import time
+import hmac
 import socket
 import random
 import string
@@ -11,8 +12,6 @@ import pandas as pd
 from datetime import datetime
 from io import BytesIO, StringIO
 from library.constants import TimeFMT
-from library.decorators import retry_default
-from library.config.config import load_config
 from dateutil.relativedelta import relativedelta
 
 
@@ -93,6 +92,29 @@ def random_date(start_date, end_date):
     return timestamp_exchange_date(time_data=random_stamp)
 
 
+def split_datetime(s_time: str, e_time: str, fmt: str = TimeFMT.FTM_SECOND, **time_type):
+    """
+    按照一定间隔切割时间
+    :param s_time: 起始时间
+    :param e_time: 结束时间
+    :param fmt: 时间格式
+    :param time_type: 间隔类型
+    :return:
+    """
+    flag = True
+    data_list = list()
+    from_time = s_time
+    while flag:
+        if (to_time := get_specify_time(time_data=from_time, fmt=fmt, **time_type)) >= e_time:
+            to_time = e_time
+            flag = False
+
+        data_list.append([from_time, to_time])
+        from_time = to_time
+
+    return data_list
+
+
 def md5hex(data):
     """
     MD5加密算法，返回32位小写16进制符号
@@ -106,6 +128,16 @@ def md5hex(data):
     m = hashlib.md5()
     m.update(data)
     return m.hexdigest()
+
+
+def hmac_sha256(secret, s):
+    """
+    散列消息认证码
+    :param secret:
+    :param s:
+    :return:
+    """
+    return hmac.new(secret.encode('utf-8'), s.encode('utf-8'), hashlib.sha256).hexdigest()
 
 
 def format_headers(headers_str):
@@ -146,11 +178,10 @@ def random_string(n):
     :param n:
     :return:
     """
-    ran_str = "".join(random.choice(string.printable[0:62]) for _ in range(n))
-    return ran_str
+    return "".join(random.choice(string.printable[0:62]) for _ in range(n))
 
 
-def string_to_file(s):
+def string_to_file(s: str):
     """
     字符串数据转成文件对象
     :param s:
@@ -170,14 +201,14 @@ def df_to_buffer(df: pd.DataFrame, text_type: str):
     :param text_type: 目前仅支持csv、xlsx格式
     :return:
     """
+    assert text_type in ['csv', 'xlsx'], '参数 text_type 不正确'
+    buffer = None
     if text_type == 'csv':
         buffer = StringIO()
         df.to_csv(buffer, index=False)
-    elif text_type == 'xlsx':
+    if text_type == 'xlsx':
         buffer = BytesIO()
         df.to_excel(buffer, engine='xlsxwriter', index=False)      # xlsxwriter 比 openpyxl快，但是xlsxwriter以后不维护了
-    else:
-        raise Exception('参数 text_type 不正确')
     return buffer
 
 
@@ -197,7 +228,28 @@ def get_local_ip():
         return None
 
 
-@retry_default()
+def float_to_str(f: float, prec: int = 38):
+    """
+    Convert the given float to a string,
+    without resorting to scientific notation
+    :param f:
+    :param prec:
+    :return:
+    """
+    context = decimal.getcontext()
+    context.prec = prec
+    return format(context.create_decimal(repr(f)), 'f')
+
+
+def str_split_int(s: str):
+    """
+    拆分字符串里的整数
+    :param s:
+    :return:
+    """
+    return re.findall('\\d+|[A-Za-z]+', s)
+
+
 def slack_message(project_name: str, message: str):
     """
     向slack发送信息
@@ -206,34 +258,12 @@ def slack_message(project_name: str, message: str):
     :return:
     """
     try:
+        from library.config.config import load_config
         url = ''
-        utc_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        text = f'通知 *_* 通知({load_config("environment")}):\n【业务名字】: {project_name}\n【通知时间】: {utc_time}\n【信息内容】: {message}'
+        text = f'通知 *_* 通知({load_config("environment")}):\n【业务名字】: {project_name}\n【信息内容】: {message}'
         post_data = {'text': text}
-        return requests.post(url=url, json=post_data, timeout=5).text
+        return requests.post(url=url, json=post_data).text
     except Exception as e:
         from library.initializer.log import Log
         Log().get_logger().error(str(e))
         return False
-
-
-def float_to_str(f: float, prce: int = 38):
-    """
-    Convert the given float to a string,
-    without resorting to scientific notation
-    :param f:
-    :param prce:
-    :return:
-    """
-    context = decimal.getcontext()
-    context.prec = prce
-    return format(context.create_decimal(repr(f)), 'f')
-
-
-def split_int(s: str):
-    """
-    拆分字符串里的整数
-    :param s:
-    :return:
-    """
-    return re.findall('\\d+|[A-Za-z]+', s)
