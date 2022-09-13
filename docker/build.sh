@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-app="SpiderPlatform"
+app="spider-platform"
 version="latest"
 image="${app}:${version}"
 
