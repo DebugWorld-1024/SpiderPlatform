@@ -33,4 +33,5 @@ COPY spiders/ ${WORK_DIR}/spiders/
 COPY run.sh   ${WORK_DIR}/run.sh
 
 
+# 生成镜像并运行程序，如果只想生成镜像，把这行命令注释掉就行。
 CMD sh run.sh

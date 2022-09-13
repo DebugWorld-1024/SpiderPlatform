@@ -258,11 +258,13 @@ def slack_message(project_name: str, message: str):
     :return:
     """
     try:
-        from library.config.config import load_config
-        url = ''
-        text = f'通知 *_* 通知({load_config("environment")}):\n【业务名字】: {project_name}\n【信息内容】: {message}'
-        post_data = {'text': text}
-        return requests.post(url=url, json=post_data).text
+        # TODO 根据自己的报警方式重写
+        return True
+        # from library.config.config import load_config
+        # url = ''
+        # text = f'通知 *_* 通知({load_config("environment")}):\n【业务名字】: {project_name}\n【信息内容】: {message}'
+        # post_data = {'text': text}
+        # return requests.post(url=url, json=post_data).text
     except Exception as e:
         from library.initializer.log import Log
         Log().get_logger().error(str(e))
