@@ -1,0 +1,24 @@
+# local、dev、testing、master
+environment: local
+
+db:
+    # redis 配置
+    redis_config:
+        host: 127.0.0.1
+        port: 6379
+        db: 2
+        password: "123456"
+        socket_timeout: 30                  # socket命令响应时间
+        socket_connect_timeout: 30          # socket连接超时时间
+        retry_on_timeout: True              # 命令超时后，将会重试一次, 重试成功则正常返回; 失败则抛出timeout异常
+        health_check_interval: 30           # 每隔30s进行健康检查
+        decode_responses: True              # 响应数据格式是str，而不是byte
+
+    mysql_config:
+        host: "127.0.0.1"
+        user: "root"
+        password: "123456"
+        database: "spider_platform"
+        port: 3306
+        charset: "utf8mb4"
+        autocommit: True

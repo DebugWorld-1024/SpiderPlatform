@@ -1,0 +1,36 @@
+FROM python:3.10.7
+MAINTAINER xxx@email.com
+
+ENV WORK_DIR "/usr/SpiderPlatform"
+RUN mkdir -p ${WORK_DIR}
+WORKDIR ${WORK_DIR}
+
+# update system
+RUN apt-get upgrade
+RUN apt-get update
+RUN apt-get install -y vim
+
+# install node
+RUN wget https://nodejs.org/dist/latest-v16.x/node-v16.15.1-linux-x64.tar.xz
+RUN tar xf node-v16.15.1-linux-x64.tar.xz
+RUN ln -s ${WORK_DIR}/node-v16.15.1-linux-x64/bin/npm   /usr/local/bin
+RUN ln -s ${WORK_DIR}/node-v16.15.1-linux-x64/bin/node  /usr/local/bin
+
+
+# copy requirements
+COPY requirements.txt ${WORK_DIR}/requirements.txt
+
+# install requirements
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+#RUN pip install -r requirements.txt -i https://pypi.mirrors.ustc.edu.cn/simple
+
+# copy code
+COPY base_class/ ${WORK_DIR}/base_class/
+COPY library/ ${WORK_DIR}/library/
+COPY schedulers/ ${WORK_DIR}/schedulers/
+COPY spiders/ ${WORK_DIR}/spiders/
+COPY run.sh   ${WORK_DIR}/run.sh
+
+
+CMD sh run.sh
