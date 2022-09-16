@@ -13,7 +13,7 @@
 ```shell
 sh docker/build.sh
 ```
-2. 裸机
+2. 裸机运行
 ```shell
 sh run.sh
 ```
