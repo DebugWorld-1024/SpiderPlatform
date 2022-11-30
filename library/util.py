@@ -205,7 +205,7 @@ def df_to_buffer(df: pd.DataFrame, text_type: str):
     buffer = None
     if text_type == 'csv':
         buffer = StringIO()
-        df.to_csv(buffer, index=False)
+        buffer.write(df.to_csv(index=False))
     if text_type == 'xlsx':
         buffer = BytesIO()
         df.to_excel(buffer, engine='xlsxwriter', index=False)      # xlsxwriter 比 openpyxl快，但是xlsxwriter以后不维护了
